@@ -41,7 +41,7 @@ target_link_libraries(freenect_node
                       ${LIBFREENECT_LIBRARY}
                       ${Boost_LIBRARY})
 
-add_library(freenect_nodelet src/nodelets/driver.cpp)
+add_library(freenect_nodelet src/nodelets/driver.cpp src/nodelets/face_filter.cpp)
 target_link_libraries(freenect_nodelet
                       ${catkin_LIBRARIES}
                       ${LIBFREENECT_LIBRARY}

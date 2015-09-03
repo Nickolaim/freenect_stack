@@ -41,6 +41,7 @@
 #include <sensor_msgs/distortion_models.h>
 #include <boost/algorithm/string/replace.hpp>
 #include <log4cxx/logger.h>
+#include "face_filter.h"
 
 using namespace std;
 namespace freenect_camera {
@@ -545,6 +546,24 @@ void DriverNodelet::publishDepthImage(const ImageBuffer& depth, ros::Time time) 
   depth_msg->data.resize(depth_msg->height * depth_msg->step);
 
   fillImage(depth, reinterpret_cast<void*>(&depth_msg->data[0]));
+
+  // EXPERIMENTAL - nick
+  time_t t = ::time(0);
+  struct tm * now = localtime(&t);
+  static uint16_t sec = -1;
+  if(now->tm_sec != sec)
+  { // Executed every second.
+    sec = now->tm_sec;
+    uint16_t* data = reinterpret_cast<uint16_t*>(&depth_msg->data[0]);
+    // Save the depth csv.
+    FaceFilter::SaveDepthImageAsCsv(depth_msg->width, depth_msg->height, data);
+    // Change the image somehow.
+    for (unsigned int i = 0; i < depth_msg->width * depth_msg->height; ++i)
+    {
+      data[i] = i % 1024;
+    }
+  }
+  // END OF EXPERIMENTAL - nick
 
   if (z_offset_mm_ != 0)
   {
