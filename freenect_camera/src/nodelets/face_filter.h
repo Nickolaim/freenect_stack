@@ -1,7 +1,12 @@
 #ifndef FREENECT_CAMERA_FACE_FILTER_H
 #define FREENECT_CAMERA_FACE_FILTER_H
 
-#include <ros/ros.h>
+#ifndef _MSC_VER
+  // TODO:  Can it be removed at all?
+  #include <ros/ros.h>
+#else
+  #include "vs/common.h"
+#endif
 
 namespace freenect_camera {
 
