@@ -11,7 +11,12 @@
     </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Data">
+      <UniqueIdentifier>{3673ccea-6750-443a-aebb-1c2230a99676}</UniqueIdentifier>
+      <ParseFiles>false</ParseFiles>
+      <Extensions>csv;png</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -32,5 +37,15 @@
     <ClInclude Include="unittest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="data\kinect-2015-09-02--21-32-01--00000.png">
+      <Filter>Data</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="data\kinect-2015-09-02--21-32-01--00000.csv">
+      <Filter>Data</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

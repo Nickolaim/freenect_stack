@@ -78,6 +78,12 @@
     <ClInclude Include="common.h" />
     <ClInclude Include="unittest.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="data\kinect-2015-09-02--21-32-01--00000.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="data\kinect-2015-09-02--21-32-01--00000.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
