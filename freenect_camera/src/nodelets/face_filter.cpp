@@ -72,7 +72,7 @@ namespace freenect_camera
       row++;
     }
     if (row != expectedHeight)
-      throw new std::runtime_error("Unexpected number of rows" + std::to_string(row - 1) + ".");
+      throw new std::runtime_error("Unexpected number of rows" + boost::lexical_cast<std::string>(row - 1) + ".");
 
   }
 
