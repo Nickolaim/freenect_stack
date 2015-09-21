@@ -3,6 +3,24 @@
 
 namespace freenect_camera
 {
+
+  struct FaceFilterHistogramTransform::FaceFilterHistogramTransformData
+  {
+
+  };
+
+  FaceFilterHistogramTransform::FaceFilterHistogramTransform() 
+    : _data(new FaceFilterHistogramTransformData)
+  {
+  }
+
+  void FaceFilterHistogramTransform::Transform(uint32_t width, uint32_t height, uint16_t* data)
+  {
+    width;
+    height;
+    data;
+  }
+
   void FaceFilter::SaveDepthImageAsCsv(uint32_t width, uint32_t height, uint16_t* data)
   {
     SaveDepthImageAsCsv(width, height, data, GenerateTempFilePath());

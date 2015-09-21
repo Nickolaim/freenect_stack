@@ -10,6 +10,23 @@
 
 namespace freenect_camera {
 
+  class DepthDataTransform
+  {
+  public:
+    virtual void Transform(uint32_t width, uint32_t height, uint16_t* data) = 0;
+  };
+
+  class FaceFilterHistogramTransform : public DepthDataTransform
+  {
+  public:
+    FaceFilterHistogramTransform();
+    void Transform(uint32_t width, uint32_t height, uint16_t* data) override;
+
+  private:
+    struct FaceFilterHistogramTransformData;
+    std::unique_ptr<FaceFilterHistogramTransformData> _data;
+  };
+
   class FaceFilter
   {
   public:
