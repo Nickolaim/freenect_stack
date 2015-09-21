@@ -39,13 +39,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="data\kinect-2015-09-02--21-32-01--00000.png">
+    <None Include="data\kinect-2015-09-02--21-32-01--00000.png">
       <Filter>Data</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="data\kinect-2015-09-02--21-32-01--00000.csv">
-      <Filter>Data</Filter>
-    </CustomBuild>
+    </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

@@ -10,3 +10,5 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include <boost/lexical_cast.hpp>
