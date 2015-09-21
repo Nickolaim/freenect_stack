@@ -11,7 +11,7 @@ namespace freenect_camera
   void FaceFilter::SaveDepthImageAsCsv(uint32_t width, uint32_t height, uint16_t* data, const std::string& filePath)
   {
     std::ofstream ofs(filePath.c_str(), std::ofstream::out);
-    for (uint32_t i = 0; i <= width * height; ++i)
+    for (uint32_t i = 0; i < width * height; ++i)
     {
       ofs << data[i];
       const char sep = ((i + 1) % width) ? ',' : '\n';
