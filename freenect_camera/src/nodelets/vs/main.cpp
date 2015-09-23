@@ -33,14 +33,15 @@ namespace UnitTest1
       ::CreateDirectoryA(_pathToTestOutDir.c_str(), nullptr);
     }
 
-    TEST_METHOD(TestMethod1)
+    TEST_METHOD(Transform1)
     {
-      Logger::WriteMessage("In TestMethod1");
       const std::string testFilePath = _pathToDataDir + "kinect-2015-09-02--21-32-01--00000.csv";
       const uint32_t width = 640;
       const uint32_t heigth = 480;
       std::unique_ptr<uint16_t> data(new uint16_t[width * heigth]);
       FaceFilter::LoadDepthImageFromCsv(testFilePath, width, heigth, data.get());
+      FaceFilterHistogramTransform ff;
+      ff.Transform(width, heigth, data.get());
     }
     
     TEST_METHOD(SaveLoad)

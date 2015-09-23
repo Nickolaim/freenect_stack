@@ -3,22 +3,130 @@
 
 namespace freenect_camera
 {
+  struct Mask
+  {
+    static const uint16_t _maxScore = 20000;
+    uint16_t _lengthOneSide;
+    std::unique_ptr<int16_t> _matrix;
+
+    Mask(uint16_t diameter, uint16_t innerHole);
+  };
 
   struct FaceFilterHistogramTransform::FaceFilterHistogramTransformData
   {
+    static const uint32_t _expectedWidth = 640;
+    static const uint32_t _expectedHeight = 480;
+    static const uint32_t _layersCount = 30;
+    static const uint32_t _depthMax = 4000;
+    static const uint32_t _segmentsCount = 20;
 
+    uint32_t _layeredSegments[_layersCount][_segmentsCount][_segmentsCount];
+    // TODO: pre-generate the mask
+    Mask _mask;
+
+    FaceFilterHistogramTransform::FaceFilterHistogramTransformData();
+    void PlacePoint(uint32_t x, uint32_t y, uint16_t value);
   };
 
-  FaceFilterHistogramTransform::FaceFilterHistogramTransform() 
+  Mask::Mask(uint16_t maxDiameter, uint16_t minDiameter)
+  {
+    _lengthOneSide = maxDiameter + 2;
+    if (maxDiameter == 0)
+      return;
+
+    _matrix = std::unique_ptr<int16_t>(new int16_t[_lengthOneSide * _lengthOneSide]());
+    double_t maxRadius = maxDiameter / 2.;
+    double_t minRadius = minDiameter / 2.;
+    double_t cx = 1 + maxRadius;
+    double_t cy = cx;
+
+    // Calculate matrix
+    uint16_t i = 0;
+    uint16_t score1Count = 0;
+    uint16_t score2Count = 0;
+    for (uint16_t y = 0; y < _lengthOneSide; ++y)
+    {
+      for (uint16_t x = 0; x < _lengthOneSide; ++x)
+      {
+        assert(i == y * _lengthOneSide + x && "Index must be always increasing by 1.");
+        double d = sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+        if (d >= minRadius && d <= maxRadius)
+        {
+          score1Count++;
+          _matrix.get()[i] = 1;
+        }
+        else if (d >= maxRadius)
+        {
+          score2Count++;
+          _matrix.get()[i] = 2;
+        }
+      }
+    }
+
+    // Assign scores
+    i = 0;
+    int16_t score1 = _maxScore / 2 / score1Count;
+    int16_t score2 = _maxScore / 2 / score2Count;
+    for (uint16_t y = 0; y < _lengthOneSide; ++y)
+    {
+      for (uint16_t x = 0; x < _lengthOneSide; ++x)
+      {
+        if (_matrix.get()[i] == 1)
+        {
+          _matrix.get()[i] = score1;
+        }
+        else if (_matrix.get()[i] == 2)
+        {
+          _matrix.get()[i] = -score2;
+        }
+      }
+    }
+  }
+
+  FaceFilterHistogramTransform::FaceFilterHistogramTransformData::FaceFilterHistogramTransformData()
+    : _mask(6, 1)
+  {
+    ::memset(_layeredSegments, 0, sizeof(_layeredSegments));
+  }
+
+  void FaceFilterHistogramTransform::FaceFilterHistogramTransformData::PlacePoint(uint32_t x, uint32_t y, uint16_t value)
+  {
+    const uint32_t xSegment = x * _segmentsCount / _expectedWidth;
+    const uint32_t ySegment = y * _segmentsCount / _expectedHeight;
+    uint32_t layer = 0;
+
+    if (value != 0)
+    {
+      if (value >= _depthMax)
+        layer = _layersCount - 1;
+      else
+        layer = value * _layersCount / _depthMax;
+    }
+    _layeredSegments[layer][xSegment][ySegment] ++;
+  }
+
+  FaceFilterHistogramTransform::FaceFilterHistogramTransform()
     : _data(new FaceFilterHistogramTransformData)
+  {
+  }
+
+  FaceFilterHistogramTransform::~FaceFilterHistogramTransform()
   {
   }
 
   void FaceFilterHistogramTransform::Transform(uint32_t width, uint32_t height, uint16_t* data)
   {
-    width;
-    height;
-    data;
+    if (width != FaceFilterHistogramTransformData::_expectedWidth || height != FaceFilterHistogramTransformData::_expectedHeight || data == nullptr)
+      return;
+
+    uint32_t index = 0;
+    for (uint32_t y = 0; y < FaceFilterHistogramTransformData::_expectedHeight; ++y){
+      for (uint32_t x = 0; x < FaceFilterHistogramTransformData::_expectedWidth; ++x){
+        _data->PlacePoint(x, y, data[index]);
+        assert((index == y * FaceFilterHistogramTransformData::_expectedWidth + x) && "Index must be always increasing by 1.");
+        index++;
+      }
+    }
   }
 
   void FaceFilter::SaveDepthImageAsCsv(uint32_t width, uint32_t height, uint16_t* data)

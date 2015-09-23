@@ -21,6 +21,7 @@ namespace freenect_camera {
   public:
     FaceFilterHistogramTransform();
     void Transform(uint32_t width, uint32_t height, uint16_t* data) override;
+    ~FaceFilterHistogramTransform();
 
   private:
     struct FaceFilterHistogramTransformData;
