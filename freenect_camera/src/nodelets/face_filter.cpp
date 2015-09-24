@@ -14,8 +14,6 @@ namespace freenect_camera
 
   struct FaceFilterHistogramTransform::FaceFilterHistogramTransformData
   {
-    static const uint32_t _expectedWidth = 640;
-    static const uint32_t _expectedHeight = 480;
     static const uint32_t _layersCount = 30;
     static const uint32_t _depthMax = 4000;
     static const uint32_t _segmentsCount = 20;
@@ -25,7 +23,7 @@ namespace freenect_camera
     Mask _mask;
 
     FaceFilterHistogramTransform::FaceFilterHistogramTransformData();
-    void PlacePoint(uint32_t x, uint32_t y, uint16_t value);
+    void PlacePoint(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint16_t value);
   };
 
   Mask::Mask(uint16_t maxDiameter, uint16_t minDiameter)
@@ -94,10 +92,10 @@ namespace freenect_camera
     }
   }
 
-  void FaceFilterHistogramTransform::FaceFilterHistogramTransformData::PlacePoint(uint32_t x, uint32_t y, uint16_t value)
+  void FaceFilterHistogramTransform::FaceFilterHistogramTransformData::PlacePoint(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint16_t value)
   {
-    const uint32_t xSegment = x * _segmentsCount / _expectedWidth;
-    const uint32_t ySegment = y * _segmentsCount / _expectedHeight;
+    const uint32_t xSegment = x * _segmentsCount / width;
+    const uint32_t ySegment = y * _segmentsCount / height;
     uint32_t layer = 0;
 
     if (value != 0)
@@ -122,14 +120,14 @@ namespace freenect_camera
 
   void FaceFilterHistogramTransform::Transform(uint32_t width, uint32_t height, uint16_t* data)
   {
-    if (width != FaceFilterHistogramTransformData::_expectedWidth || height != FaceFilterHistogramTransformData::_expectedHeight || data == nullptr)
+    if (data == nullptr)
       return;
 
     uint32_t index = 0;
-    for (uint32_t y = 0; y < FaceFilterHistogramTransformData::_expectedHeight; ++y){
-      for (uint32_t x = 0; x < FaceFilterHistogramTransformData::_expectedWidth; ++x){
-        _data->PlacePoint(x, y, data[index]);
-        assert((index == y * FaceFilterHistogramTransformData::_expectedWidth + x) && "Index must be always increasing by 1.");
+    for (uint32_t y = 0; y < height; ++y){
+      for (uint32_t x = 0; x < width; ++x){
+        _data->PlacePoint(x, y, width, height, data[index]);
+        assert((index == y * width + x) && "Index must be always increasing by 1.");
         index++;
       }
     }
