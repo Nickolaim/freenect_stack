@@ -7,7 +7,7 @@ namespace freenect_camera
   {
     static const uint16_t _maxScore = 20000;
     uint16_t _lengthOneSide;
-    std::unique_ptr<int16_t> _matrix;
+    std::vector<int16_t> _matrix;
 
     Mask(uint16_t diameter, uint16_t innerHole);
   };
@@ -20,7 +20,7 @@ namespace freenect_camera
     static const uint32_t _depthMax = 4000;
     static const uint32_t _segmentsCount = 20;
 
-    uint32_t _layeredSegments[_layersCount][_segmentsCount][_segmentsCount];
+    std::vector<std::vector<uint16_t>> _layeredSegments;
     // TODO: pre-generate the mask
     Mask _mask;
 
@@ -34,7 +34,7 @@ namespace freenect_camera
     if (maxDiameter == 0)
       return;
 
-    _matrix = std::unique_ptr<int16_t>(new int16_t[_lengthOneSide * _lengthOneSide]());
+    _matrix = std::vector<int16_t>(_lengthOneSide * _lengthOneSide);
     double_t maxRadius = maxDiameter / 2.;
     double_t minRadius = minDiameter / 2.;
     double_t cx = 1 + maxRadius;
@@ -53,13 +53,15 @@ namespace freenect_camera
         if (d >= minRadius && d <= maxRadius)
         {
           score1Count++;
-          _matrix.get()[i] = 1;
+          _matrix[i] = 1;
         }
         else if (d >= maxRadius)
         {
           score2Count++;
-          _matrix.get()[i] = 2;
+          _matrix[i] = 2;
         }
+
+        i++;
       }
     }
 
@@ -71,13 +73,13 @@ namespace freenect_camera
     {
       for (uint16_t x = 0; x < _lengthOneSide; ++x)
       {
-        if (_matrix.get()[i] == 1)
+        if (_matrix[i] == 1)
         {
-          _matrix.get()[i] = score1;
+          _matrix[i] = score1;
         }
-        else if (_matrix.get()[i] == 2)
+        else if (_matrix[i] == 2)
         {
-          _matrix.get()[i] = -score2;
+          _matrix[i] = -score2;
         }
       }
     }
@@ -86,7 +88,10 @@ namespace freenect_camera
   FaceFilterHistogramTransform::FaceFilterHistogramTransformData::FaceFilterHistogramTransformData()
     : _mask(6, 1)
   {
-    ::memset(_layeredSegments, 0, sizeof(_layeredSegments));
+    for (auto i = 0; i < _layersCount; ++i)
+    {
+      _layeredSegments.push_back(std::vector<uint16_t>(_segmentsCount * _segmentsCount));
+    }
   }
 
   void FaceFilterHistogramTransform::FaceFilterHistogramTransformData::PlacePoint(uint32_t x, uint32_t y, uint16_t value)
@@ -102,7 +107,8 @@ namespace freenect_camera
       else
         layer = value * _layersCount / _depthMax;
     }
-    _layeredSegments[layer][xSegment][ySegment] ++;
+
+    _layeredSegments[layer][ySegment * _segmentsCount + xSegment] ++;
   }
 
   FaceFilterHistogramTransform::FaceFilterHistogramTransform()
