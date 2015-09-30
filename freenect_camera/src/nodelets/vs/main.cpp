@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include "unittest.h"
 #include "..\face_filter.h"
+#include "..\face_filter.hpp"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace freenect_camera;
@@ -36,14 +37,18 @@ namespace UnitTest1
     TEST_METHOD(Transform1)
     {
       const std::string testFilePath = _pathToDataDir + "kinect-2015-09-02--21-32-01--00000.csv";
+      const std::string testFilePathBase = _pathToTestOutDir + "kinect-2015-09-02--21-32-01--00000-result";
       const uint32_t width = 640;
       const uint32_t heigth = 480;
       std::unique_ptr<uint16_t> data(new uint16_t[width * heigth]);
-      FaceFilter::LoadDepthImageFromCsv(testFilePath, width, heigth, data.get());
-      FaceFilterHistogramTransform ff;
+      FaceFilter::LoadDataFromCsv(testFilePath, width, heigth, data.get());
+      FaceFilterHistogramTransform ff(30U, 20U, 4000U, true, testFilePathBase);
       ff.Transform(width, heigth, data.get());
+
+      const std::string outtTestFilePath = testFilePathBase + ".csv";
+      FaceFilter::SaveDataAsCsv(width, heigth, data.get(), outtTestFilePath);
     }
-    
+
     TEST_METHOD(SaveLoad)
     {
       const std::string testFilePath = _pathToTestOutDir + "save_load.csv";
@@ -55,10 +60,10 @@ namespace UnitTest1
         data.get()[i] = static_cast<uint16_t>(i % std::numeric_limits<uint16_t>::max());
       }
 
-      FaceFilter::SaveDepthImageAsCsv(width, heigth, data.get(), testFilePath);
+      FaceFilter::SaveDataAsCsv(width, heigth, data.get(), testFilePath);
 
       std::unique_ptr<uint16_t> dataActual(new uint16_t[width * heigth]);
-      FaceFilter::LoadDepthImageFromCsv(testFilePath, width, heigth, dataActual.get());
+      FaceFilter::LoadDataFromCsv(testFilePath, width, heigth, dataActual.get());
       for (auto i = 0; i < width * heigth; i++)
       {
         Assert::AreEqual(data.get()[i], dataActual.get()[i]);

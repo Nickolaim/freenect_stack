@@ -556,7 +556,7 @@ void DriverNodelet::publishDepthImage(const ImageBuffer& depth, ros::Time time) 
     sec = now->tm_sec;
     uint16_t* data = reinterpret_cast<uint16_t*>(&depth_msg->data[0]);
     // Save the depth csv.
-    FaceFilter::SaveDepthImageAsCsv(depth_msg->width, depth_msg->height, data);
+    FaceFilter::SaveDataAsCsv(depth_msg->width, depth_msg->height, data);
     // Change the image somehow.
     for (unsigned int i = 0; i < depth_msg->width * depth_msg->height; ++i)
     {

@@ -19,7 +19,7 @@ namespace freenect_camera {
   class FaceFilterHistogramTransform : public DepthDataTransform
   {
   public:
-    FaceFilterHistogramTransform();
+    FaceFilterHistogramTransform(uint32_t layersCount = 30, uint32_t segmentsCount = 20, uint32_t depthMax = 4000, bool tracingEnabled = false, const std::string& fileNameBaseTrace = std::string());
     void Transform(uint32_t width, uint32_t height, uint16_t* data) override;
     ~FaceFilterHistogramTransform();
 
@@ -31,9 +31,12 @@ namespace freenect_camera {
   class FaceFilter
   {
   public:
-    static void SaveDepthImageAsCsv(uint32_t width, uint32_t height, uint16_t* data);
-    static void SaveDepthImageAsCsv(uint32_t width, uint32_t height, uint16_t* data, const std::string& filePath);
-    static void LoadDepthImageFromCsv(const std::string& filePath, uint32_t expectedWidth, uint32_t expectedHeight, uint16_t* data);
+    template<typename T>
+    static void SaveDataAsCsv(uint32_t width, uint32_t height, const T* data);
+    template<typename T>
+    static void SaveDataAsCsv(uint32_t width, uint32_t height, const T* data, const std::string& filePath);
+    template<typename T>
+    static void LoadDataFromCsv(const std::string& filePath, uint32_t expectedWidth, uint32_t expectedHeight, T* data);
 
   private:
     static std::string GenerateTempFilePath();

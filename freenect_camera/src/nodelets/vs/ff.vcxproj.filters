@@ -37,6 +37,9 @@
     <ClInclude Include="unittest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\face_filter.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\kinect-2015-09-02--21-32-01--00000.png">
