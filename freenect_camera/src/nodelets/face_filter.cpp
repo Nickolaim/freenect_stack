@@ -16,9 +16,9 @@ namespace freenect_camera
 #pragma warning (disable: 4512)  // Cannot generate assignment operator automatically due to const members
 #endif
 
-  struct FaceFilterHistogramTransform::FaceFilterHistogramTransformData
+  struct FaceFilterHistogramTransformData
   {
-    FaceFilterHistogramTransform::FaceFilterHistogramTransformData(uint32_t layersCount, uint32_t segmentsCount = 20, uint32_t depthMax = 4000, bool tracingEnabled = false, const std::string& fileNameBaseTrace = std::string());
+    FaceFilterHistogramTransformData(uint32_t layersCount, uint32_t segmentsCount = 20, uint32_t depthMax = 4000, bool tracingEnabled = false, const std::string& fileNameBaseTrace = std::string());
     void PlacePoints(uint32_t width, uint32_t height, uint16_t* data);
     void ApplyMask();
     void FilterDepthData(uint32_t width, uint32_t height, uint16_t* data);
@@ -30,7 +30,7 @@ namespace freenect_camera
     bool _tracingEnabled;
     const std::string& _fileNameBaseTrace;
 
-    std::vector<std::vector<uint16_t>> _layeredSegments;
+    std::vector<std::vector<uint16_t> > _layeredSegments;
     std::vector<char> _segmentFilter;
 
     // TODO: pre-generate the mask
@@ -107,7 +107,7 @@ namespace freenect_camera
     }
   }
 
-  FaceFilterHistogramTransform::FaceFilterHistogramTransformData::FaceFilterHistogramTransformData(uint32_t layersCount, uint32_t segmentsCount, uint32_t depthMax, bool tracingEnabled, const std::string& fileNameBaseTrace)
+  FaceFilterHistogramTransformData::FaceFilterHistogramTransformData(uint32_t layersCount, uint32_t segmentsCount, uint32_t depthMax, bool tracingEnabled, const std::string& fileNameBaseTrace)
     : _mask(5, 1)
     , _layersCount(layersCount)
     , _depthMax(depthMax)
@@ -123,7 +123,7 @@ namespace freenect_camera
     _segmentFilter = std::vector<char>(_segmentsCount * _segmentsCount);
   }
 
-  void FaceFilterHistogramTransform::FaceFilterHistogramTransformData::PlacePoints(uint32_t width, uint32_t height, uint16_t* data)
+  void FaceFilterHistogramTransformData::PlacePoints(uint32_t width, uint32_t height, uint16_t* data)
   {
     Trace("mask", _mask._matrix, _mask._lengthOneSide, _mask._lengthOneSide, 0);
 
@@ -137,7 +137,7 @@ namespace freenect_camera
     }
   }
 
-  void FaceFilterHistogramTransform::FaceFilterHistogramTransformData::PlacePoint(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint16_t value)
+  void FaceFilterHistogramTransformData::PlacePoint(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint16_t value)
   {
     uint32_t layer = 0;
 
@@ -153,7 +153,7 @@ namespace freenect_camera
     }
   }
 
-  void FaceFilterHistogramTransform::FaceFilterHistogramTransformData::ApplyMask()
+  void FaceFilterHistogramTransformData::ApplyMask()
   {
     // The first and the last layers are ignored
     // TODO: has a matrix with layers of interest, based on some criteria (like having at least radiusMax not empty sequential points)
@@ -175,7 +175,7 @@ namespace freenect_camera
     }
   }
 
-  void FaceFilterHistogramTransform::FaceFilterHistogramTransformData::ApplyMask(const std::vector<uint16_t>& layer, const Mask& mask, std::vector<uint16_t>& scores)
+  void FaceFilterHistogramTransformData::ApplyMask(const std::vector<uint16_t>& layer, const Mask& mask, std::vector<uint16_t>& scores)
   {
     uint32_t index = 0;
     for (uint32_t y = 0; y < _segmentsCount; ++y) {
@@ -209,7 +209,7 @@ namespace freenect_camera
     }
   }
 
-  inline uint32_t FaceFilterHistogramTransform::FaceFilterHistogramTransformData::GetSegmentIndex(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+  inline uint32_t FaceFilterHistogramTransformData::GetSegmentIndex(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
   {
     const uint32_t xSegment = x * _segmentsCount / width;
     const uint32_t ySegment = y * _segmentsCount / height;
@@ -219,12 +219,12 @@ namespace freenect_camera
     return segmentIndex;
   }
 
-  void FaceFilterHistogramTransform::FaceFilterHistogramTransformData::FilterDepthData(uint32_t width, uint32_t height, uint16_t* data)
+  void FaceFilterHistogramTransformData::FilterDepthData(uint32_t width, uint32_t height, uint16_t* data)
   {
     uint32_t index = 0;
     for (uint32_t y = 0; y < height; ++y) {
       for (uint32_t x = 0; x < width; ++x) {
-        auto segmentIndex = GetSegmentIndex(x, y, width, height);
+        uint32_t segmentIndex = GetSegmentIndex(x, y, width, height);
         if (!_segmentFilter[segmentIndex]) {
           data[index] = 0;
         }
@@ -235,14 +235,14 @@ namespace freenect_camera
   }
 
   template<typename T>
-  void FaceFilterHistogramTransform::FaceFilterHistogramTransformData::Trace(const std::string& name, const std::vector<T>& data, uint32_t width, uint32_t height, uint32_t counter)
+  void FaceFilterHistogramTransformData::Trace(const std::string& name, const std::vector<T>& data, uint32_t width, uint32_t height, uint32_t counter)
   {
     assert(data.size() <= width * height && "width and height are invalid for this vector.");
     Trace(name, data.data(), width, height, counter);
   }
 
   template<typename T>
-  void FaceFilterHistogramTransform::FaceFilterHistogramTransformData::Trace(const std::string& name, const T* data, const uint32_t width, const uint32_t height, const uint32_t counter)
+  void FaceFilterHistogramTransformData::Trace(const std::string& name, const T* data, const uint32_t width, const uint32_t height, const uint32_t counter)
   {
     if (!_tracingEnabled)
       return;
@@ -274,7 +274,7 @@ namespace freenect_camera
 
   void FaceFilterHistogramTransform::Transform(uint32_t width, uint32_t height, uint16_t* data)
   {
-    if (data == nullptr)
+    if (data == NULL)
       return;
 
     _data->PlacePoints(width, height, data);

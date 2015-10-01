@@ -16,16 +16,17 @@ namespace freenect_camera {
     virtual void Transform(uint32_t width, uint32_t height, uint16_t* data) = 0;
   };
 
+  struct FaceFilterHistogramTransformData;
+
   class FaceFilterHistogramTransform : public DepthDataTransform
   {
   public:
     FaceFilterHistogramTransform(uint32_t layersCount = 30, uint32_t segmentsCount = 20, uint32_t depthMax = 4000, bool tracingEnabled = false, const std::string& fileNameBaseTrace = std::string());
-    void Transform(uint32_t width, uint32_t height, uint16_t* data) override;
+    void Transform(uint32_t width, uint32_t height, uint16_t* data);
     ~FaceFilterHistogramTransform();
 
   private:
-    struct FaceFilterHistogramTransformData;
-    std::unique_ptr<FaceFilterHistogramTransformData> _data;
+    boost::shared_ptr<FaceFilterHistogramTransformData> _data;
   };
 
   class FaceFilter
