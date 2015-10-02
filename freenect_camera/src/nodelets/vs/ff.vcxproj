@@ -85,9 +85,6 @@
     <Content Include="data\kinect-2015-09-02--21-32-01--00000.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="data\7by7Input.csv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="data\kinect-2015-09-02--21-32-01--00000.png" />
     <None Include="packages.config" />
   </ItemGroup>
