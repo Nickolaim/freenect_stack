@@ -8,8 +8,10 @@ namespace freenect_camera
     static const uint16_t _maxScore = 20000;
     uint16_t _lengthOneSide;
     std::vector<int16_t> _matrix;
+    std::vector<int16_t> _selectionIndexes;
 
     Mask(uint16_t diameter, uint16_t innerHole);
+    void ApplySelection(std::vector<char>& filter, uint32_t segmentsOneSide);
   };
 
 #ifdef _MSC_VER
@@ -107,6 +109,37 @@ namespace freenect_camera
     }
   }
 
+  void Mask::ApplySelection(std::vector<char>& filter, uint32_t segmentsOneSide)
+  {
+    uint32_t index = 0;
+    for (uint32_t y = 0; y < segmentsOneSide; ++y) {
+      for (uint32_t x = 0; x < segmentsOneSide; ++x) {
+        assert((index == y * segmentsOneSide + x) && "Index must be always increasing by 1.");
+        if (filter[index] == 1){
+          uint16_t centerOffset = _lengthOneSide / 2;
+          int32_t maskIndex = 0;
+          for (uint16_t my = 0; my < _lengthOneSide; ++my) {
+            for (uint16_t mx = 0; mx < _lengthOneSide; ++mx) {
+              int32_t tx = x + mx - centerOffset;
+              int32_t ty = y + my - centerOffset;
+              int32_t tIndex = ty * segmentsOneSide + tx;
+              assert((maskIndex == my * _lengthOneSide + mx) && "Index must be always increasing by 1.");
+              const int32_t segmentsCount = static_cast<int32_t>(segmentsOneSide);
+
+              if (tx >= 0 && tx < segmentsCount && ty >= 0 && ty < segmentsCount){
+                if (_matrix[maskIndex] >= 0 && filter[tIndex] == 0) {
+                  filter[tIndex] = 'O';
+                }
+              }
+              maskIndex++;
+            }
+          }
+        }
+        index++;
+      }
+    }
+  }
+
   FaceFilterHistogramTransformData::FaceFilterHistogramTransformData(uint32_t layersCount, uint32_t segmentsCount, uint32_t depthMax, bool tracingEnabled, const std::string& fileNameBaseTrace)
     : _mask(5, 1)
     , _layersCount(layersCount)
@@ -170,9 +203,11 @@ namespace freenect_camera
           _segmentFilter[i] |= 1;
         }
       }
-
       Trace("segmentFilter", _segmentFilter, _segmentsCount, _segmentsCount, j);
     }
+
+    _mask.ApplySelection(_segmentFilter, _segmentsCount);
+    Trace("segmentSelection", _segmentFilter, _segmentsCount, _segmentsCount, 0);
   }
 
   void FaceFilterHistogramTransformData::ApplyMask(const std::vector<uint16_t>& layer, const Mask& mask, std::vector<uint16_t>& scores)
