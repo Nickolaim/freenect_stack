@@ -11,7 +11,7 @@ namespace freenect_camera
     std::vector<int16_t> _selectionIndexes;
 
     Mask(uint16_t diameter, uint16_t innerHole);
-    void ApplySelection(std::vector<char>& filter, uint32_t segmentsOneSide);
+    void ApplySelection(std::vector<char>& filter, uint32_t segmentsOneSide, uint32_t layersCount);
   };
 
 #ifdef _MSC_VER
@@ -37,6 +37,8 @@ namespace freenect_camera
 
     // TODO: pre-generate the mask
     Mask _mask;
+    uint32_t LayerToDepth(uint32_t layer);
+    uint32_t DepthToLayer(uint32_t depth);
 
     void PlacePoint(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint16_t value);
     void ApplyMask(const std::vector<uint16_t>& layer, const Mask& mask, std::vector<uint16_t>& scores);
@@ -109,13 +111,14 @@ namespace freenect_camera
     }
   }
 
-  void Mask::ApplySelection(std::vector<char>& filter, uint32_t segmentsOneSide)
+  void Mask::ApplySelection(std::vector<char>& filter, uint32_t segmentsOneSide, uint32_t layersCount)
   {
     uint32_t index = 0;
     for (uint32_t y = 0; y < segmentsOneSide; ++y) {
       for (uint32_t x = 0; x < segmentsOneSide; ++x) {
         assert((index == y * segmentsOneSide + x) && "Index must be always increasing by 1.");
-        if (filter[index] == 1){
+        uint32_t filterValue = filter[index];
+        if (filterValue > 0 && filterValue < layersCount){
           uint16_t centerOffset = _lengthOneSide / 2;
           int32_t maskIndex = 0;
           for (uint16_t my = 0; my < _lengthOneSide; ++my) {
@@ -128,7 +131,7 @@ namespace freenect_camera
 
               if (tx >= 0 && tx < segmentsCount && ty >= 0 && ty < segmentsCount){
                 if (_matrix[maskIndex] >= 0 && filter[tIndex] == 0) {
-                  filter[tIndex] = 'O';
+                  filter[tIndex] = filter[index] + static_cast<char>(layersCount);
                 }
               }
               maskIndex++;
@@ -170,17 +173,26 @@ namespace freenect_camera
     }
   }
 
+  uint32_t FaceFilterHistogramTransformData::LayerToDepth(uint32_t layer)
+  {
+    assert(layer <= _layersCount && "Invalid layer.");
+    uint32_t result = layer == _layersCount ? _depthMax : layer * _depthMax / _layersCount;
+    return result;
+  }
+
+  uint32_t FaceFilterHistogramTransformData::DepthToLayer(uint32_t depth)
+  {
+    uint32_t result = depth >= _depthMax ? _layersCount - 1U: depth * _layersCount / _depthMax;
+    assert(depth >= LayerToDepth(result) && (depth <= LayerToDepth(result + 1U) || depth >= _depthMax ) && "DepthToLayer(), roundtrip verification check failed.");
+    return result;
+  }
+
   void FaceFilterHistogramTransformData::PlacePoint(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint16_t value)
   {
-    uint32_t layer = 0;
-
     if (value > 0)
     {
       const uint32_t segmentIndex = GetSegmentIndex(x, y, width, height);
-      if (value >= _depthMax)
-        layer = _layersCount - 1;
-      else
-        layer = value * _layersCount / _depthMax;
+      const uint32_t layer = DepthToLayer(value);
 
       _layeredSegments[layer][segmentIndex] ++;
     }
@@ -200,13 +212,13 @@ namespace freenect_camera
 
       for (uint16_t i = 0; i < scores.size(); ++i){
         if (scores[i] > Mask::_maxScore * .78) {
-          _segmentFilter[i] |= 1;
+          _segmentFilter[i] = std::max(_segmentFilter[i], static_cast<char>(j));
         }
       }
       Trace("segmentFilter", _segmentFilter, _segmentsCount, _segmentsCount, j);
     }
 
-    _mask.ApplySelection(_segmentFilter, _segmentsCount);
+    _mask.ApplySelection(_segmentFilter, _segmentsCount, _layersCount);
     Trace("segmentSelection", _segmentFilter, _segmentsCount, _segmentsCount, 0);
   }
 
@@ -257,12 +269,15 @@ namespace freenect_camera
   void FaceFilterHistogramTransformData::FilterDepthData(uint32_t width, uint32_t height, uint16_t* data)
   {
     uint32_t index = 0;
-    for (uint32_t y = 0; y < height; ++y) {
-      for (uint32_t x = 0; x < width; ++x) {
+    for (uint32_t y = 0; y < height; ++y)
+    {
+      for (uint32_t x = 0; x < width; ++x)
+      {
         uint32_t segmentIndex = GetSegmentIndex(x, y, width, height);
-        if (!_segmentFilter[segmentIndex]) {
-          data[index] = 0;
-        }
+        uint32_t layerValueCoded = _segmentFilter[segmentIndex];
+        uint32_t layer = layerValueCoded > _layersCount ? layerValueCoded - _layersCount : layerValueCoded;
+        uint16_t maxAllowedValue = layer == 0 ? 0U : static_cast<uint16_t>(LayerToDepth(layer + 1));
+        data[index] = data[index] > maxAllowedValue ? 0U : data[index];
         assert((index == y * width + x) && "Index must be always increasing by 1.");
         index++;
       }
